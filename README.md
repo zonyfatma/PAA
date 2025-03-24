@@ -1,1 +1,14 @@
-Studi Kasus Smart Kurir, dimana membuat program yang mendemokan smart courier dimana sang kurir berusaha mengantarkan paket dari satu titik (source) ke titik lainnya (destination) yang ditandai dengan bendera kuning sebagai source dan bendera merah sebagai destinasi. peta lokasi serta source dan destinasi akan dirubah secara acak.
+# Smart Kurir  
+Proyek ini adalah sistem pencarian jalur optimal untuk kurir berbasis Pygame dan algoritma pencarian jalur.  
+
+## 🚀 Fitur  
+- Memuat peta dari gambar  
+- Menentukan jalur terbaik untuk kurir  
+- Visualisasi pergerakan kurir  
+
+## 🔧 Cara Menjalankan  
+1. Pastikan Python 3 sudah terinstal.  
+2. Install dependensi dengan `pip install pygame`.  
+3. Jalankan program dengan:  
+   ```bash
+   python main.py
