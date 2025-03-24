@@ -1,2 +1,1 @@
-# PAA
-tugas PAA
+Studi Kasus Smart Kurir, dimana membuat program yang mendemokan smart courier dimana sang kurir berusaha mengantarkan paket dari satu titik (source) ke titik lainnya (destination) yang ditandai dengan bendera kuning sebagai source dan bendera merah sebagai destinasi. peta lokasi serta source dan destinasi akan dirubah secara acak.
