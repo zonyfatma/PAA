@@ -86,7 +86,7 @@ def animate_path(binary_image, path):
     fig, ax = plt.subplots()
     ax.imshow(binary_image, cmap="gray", origin="upper")
 
-    triangle = ax.text(path[0][1], path[0][0], '▲', fontsize=12, color='green', ha='center', va='center')
+    triangle = ax.text(path[0][1], path[0][0], '▲', fontsize=24, color='red', ha='center', va='center')
 
     step_size = max(1, len(path) // 300)
 
