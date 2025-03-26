@@ -9,7 +9,6 @@ import tkinter as tk
 from tkinter import Button
 
 
-# Fungsi memuat peta
 def load_image(image_path):
     image = cv2.imread(image_path)
     if image is None:
@@ -18,11 +17,10 @@ def load_image(image_path):
     if image.shape[1] < 1000 or image.shape[1] > 1500 or image.shape[0] < 700 or image.shape[0] > 1000:
         raise ValueError("Error: Ukuran peta harus dalam rentang 1000x700 hingga 1500x1000 piksel!")
 
-    binary_image = cv2.inRange(image, (90, 90, 90), (150, 150, 150))  # Jalan: abu-abu
+    binary_image = cv2.inRange(image, (90, 90, 90), (150, 150, 150))  
     return binary_image
 
 
-# Fungsi untuk memilih posisi acak pada jalan
 def get_random_point(binary_image):
     white_pixels = np.column_stack(np.where(binary_image > 0))
     if len(white_pixels) == 0:
@@ -30,10 +28,9 @@ def get_random_point(binary_image):
     return tuple(white_pixels[random.randint(0, len(white_pixels) - 1)])
 
 
-# Fungsi algoritma Dijkstra untuk mencari jalur terpendek
 def dijkstra(binary_image, start, end):
     rows, cols = binary_image.shape
-    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]  # Atas, Bawah, Kiri, Kanan
+    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)] 
     queue = [(0, start)]
     visited = set()
     parent = {start: None}
@@ -64,10 +61,9 @@ def dijkstra(binary_image, start, end):
     if len(path) == 1:
         raise ValueError("Error: Tidak ada jalur dari start ke finish!")
 
-    return path[::-1]  # Balikkan jalur
+    return path[::-1]  
 
 
-# Fungsi untuk simbol arah kurir
 def get_triangle_symbol(p1, p2):
     dy, dx = p2[0] - p1[0], p2[1] - p1[1]
     if abs(dx) > abs(dy): 
@@ -76,7 +72,6 @@ def get_triangle_symbol(p1, p2):
         return '▲' if dy < 0 else '▼'
 
 
-# Fungsi animasi jalur
 def animate_path(binary_image, path, start, end):
     fig, ax = plt.subplots()
     ax.imshow(binary_image, cmap="gray", origin="upper")
@@ -102,7 +97,6 @@ def animate_path(binary_image, path, start, end):
     plt.show()
 
 
-# Fungsi untuk mengacak kurir dan tujuan
 def randomize_positions():
     global start, end, binary_image
     start = get_random_point(binary_image)
@@ -111,21 +105,18 @@ def randomize_positions():
         end = get_random_point(binary_image)
     print(f"Source: {start}, Destination: {end}")
 
-    # Cari jalur baru dan animasi ulang
     path = dijkstra(binary_image, start, end)
     print(f"Jalur ditemukan! Panjang jalur: {len(path)}")
     animate_path(binary_image, path, start, end)
 
 
 if __name__ == "__main__":
-    image_path = "jalan.png"  # Nama file gambar peta
+    image_path = "jalan.png"  
 
     try:
-        # Memuat gambar dan memvalidasi ukuran
         binary_image = load_image(image_path)
         print("Peta berhasil dimuat.")
 
-        # Inisialisasi posisi kurir dan tujuan
         start = get_random_point(binary_image)
         end = get_random_point(binary_image)
         while start == end:
@@ -133,14 +124,12 @@ if __name__ == "__main__":
 
         print(f"Source: {start}, Destination: {end}")
 
-        # GUI untuk tombol interaktif
         root = tk.Tk()
         root.title("Smart Courier - Acak Kurir dan Tujuan")
 
         Button(root, text="Acak Kurir dan Tujuan", command=randomize_positions).pack(pady=10)
         Button(root, text="Keluar", command=root.destroy).pack(pady=10)
 
-        # Jalur pertama kali
         path = dijkstra(binary_image, start, end)
         print(f"Jalur ditemukan! Panjang jalur: {len(path)}")
         animate_path(binary_image, path, start, end)
