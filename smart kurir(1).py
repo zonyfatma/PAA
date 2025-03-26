@@ -4,28 +4,21 @@ import heapq
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from scipy.spatial import distance
-import random
+import random  # Pastikan pustaka random diimpor
 import tkinter as tk
-from tkinter import Button, filedialog
+from tkinter import Button
 
 
-def load_image():
-    global binary_image, image_path
-    image_path = filedialog.askopenfilename(filetypes=[("Image Files", "*.png;*.jpg;*.jpeg")])
-    if not image_path:
-        return
-    
+def load_image(image_path):
     image = cv2.imread(image_path)
     if image is None:
-        print("Error: Gambar tidak ditemukan!")
-        return
+        raise FileNotFoundError(f"Error: Gambar '{image_path}' tidak ditemukan!")
 
     if image.shape[1] < 1000 or image.shape[1] > 1500 or image.shape[0] < 700 or image.shape[0] > 1000:
-        print("Error: Ukuran peta tidak sesuai!")
-        return
+        raise ValueError("Error: Ukuran peta harus dalam rentang 1000x700 hingga 1500x1000 piksel!")
 
-    binary_image = cv2.inRange(image, (90, 90, 90), (150, 150, 150))
-    print("Peta berhasil dimuat.")
+    binary_image = cv2.inRange(image, (90, 90, 90), (150, 150, 150))  
+    return binary_image
 
 
 def get_random_point(binary_image):
@@ -37,7 +30,7 @@ def get_random_point(binary_image):
 
 def dijkstra(binary_image, start, end):
     rows, cols = binary_image.shape
-    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]  # Atas, Bawah, Kiri, Kanan
     queue = [(0, start)]
     visited = set()
     parent = {start: None}
@@ -68,14 +61,14 @@ def dijkstra(binary_image, start, end):
     if len(path) == 1:
         raise ValueError("Error: Tidak ada jalur dari start ke finish!")
 
-    return path[::-1]
+    return path[::-1] 
 
 
 def get_triangle_symbol(p1, p2):
     dy, dx = p2[0] - p1[0], p2[1] - p1[1]
-    if abs(dx) > abs(dy):
-        return '▶' if dx > 0 else '◀'
-    else:
+    if abs(dx) > abs(dy): 
+        return '▶' if dx > 0 else '◀' 
+    else:  
         return '▲' if dy < 0 else '▼'
 
 
@@ -93,7 +86,7 @@ def animate_path(binary_image, path, start, end):
         idx = min(frame * step_size, len(path) - 1)
         y, x = path[idx]
         triangle.set_position((x, y))
-        
+
         if idx < len(path) - 1:
             triangle.set_text(get_triangle_symbol(path[idx], path[idx + 1]))
 
@@ -105,29 +98,45 @@ def animate_path(binary_image, path, start, end):
 
 
 def randomize_positions():
-    global start, end
-    if binary_image is None:
-        print("Error: Peta belum dimuat!")
-        return
-    
+    global start, end, binary_image
     start = get_random_point(binary_image)
     end = get_random_point(binary_image)
     while start == end:
         end = get_random_point(binary_image)
     print(f"Source: {start}, Destination: {end}")
-    
+
     path = dijkstra(binary_image, start, end)
     print(f"Jalur ditemukan! Panjang jalur: {len(path)}")
     animate_path(binary_image, path, start, end)
 
 
 if __name__ == "__main__":
-    binary_image = None
-    root = tk.Tk()
-    root.title("Smart Courier")
+    image_path = "jalan.png" 
 
-    Button(root, text="Load Map", command=load_image).pack(pady=10)
-    Button(root, text="Acak Kurir dan Tujuan", command=randomize_positions).pack(pady=10)
-    Button(root, text="Keluar", command=root.destroy).pack(pady=10)
+    try:
+        binary_image = load_image(image_path)
+        print("Peta berhasil dimuat.")
 
-    root.mainloop()
+        start = get_random_point(binary_image)
+        end = get_random_point(binary_image)
+        while start == end:
+            end = get_random_point(binary_image)
+
+        print(f"Source: {start}, Destination: {end}")
+
+        root = tk.Tk()
+        root.title("Smart Courier - Acak Kurir dan Tujuan")
+
+        Button(root, text="Acak Kurir dan Tujuan", command=randomize_positions).pack(pady=10)
+        Button(root, text="Keluar", command=root.destroy).pack(pady=10)
+
+        path = dijkstra(binary_image, start, end)
+        print(f"Jalur ditemukan! Panjang jalur: {len(path)}")
+        animate_path(binary_image, path, start, end)
+
+        root.mainloop()
+
+    except FileNotFoundError as e:
+        print(e)
+    except ValueError as e:
+        print(e)
