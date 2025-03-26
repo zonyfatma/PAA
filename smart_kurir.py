@@ -3,7 +3,7 @@ import numpy as np
 import heapq
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from scipy.spatial import distance
+from scipy.spatial import distanc
 
 def load_image(image_path):
     image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
