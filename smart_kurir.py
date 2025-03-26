@@ -4,11 +4,9 @@ import heapq
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from scipy.spatial import distance
-import random  # Pastikan pustaka random diimpor
-import tkinter as tk
-from tkinter import Button
+import random
 
-
+# Fungsi memuat peta
 def load_image(image_path):
     image = cv2.imread(image_path)
     if image is None:
@@ -17,20 +15,20 @@ def load_image(image_path):
     if image.shape[1] < 1000 or image.shape[1] > 1500 or image.shape[0] < 700 or image.shape[0] > 1000:
         raise ValueError("Error: Ukuran peta harus dalam rentang 1000x700 hingga 1500x1000 piksel!")
 
-    binary_image = cv2.inRange(image, (90, 90, 90), (150, 150, 150))  
+    binary_image = cv2.inRange(image, (90, 90, 90), (150, 150, 150))  # Jalan: abu-abu
     return binary_image
 
-
+# Fungsi untuk memilih posisi acak pada jalan
 def get_random_point(binary_image):
     white_pixels = np.column_stack(np.where(binary_image > 0))
     if len(white_pixels) == 0:
         raise ValueError("Error: Tidak ada area jalan yang valid pada peta!")
     return tuple(white_pixels[random.randint(0, len(white_pixels) - 1)])
 
-
+# Fungsi algoritma Dijkstra untuk mencari jalur terpendek
 def dijkstra(binary_image, start, end):
     rows, cols = binary_image.shape
-    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)] 
+    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]  # Atas, Bawah, Kiri, Kanan
     queue = [(0, start)]
     visited = set()
     parent = {start: None}
@@ -61,9 +59,9 @@ def dijkstra(binary_image, start, end):
     if len(path) == 1:
         raise ValueError("Error: Tidak ada jalur dari start ke finish!")
 
-    return path[::-1]  
+    return path[::-1]  # Balikkan jalur
 
-
+# Fungsi untuk simbol arah kurir
 def get_triangle_symbol(p1, p2):
     dy, dx = p2[0] - p1[0], p2[1] - p1[1]
     if abs(dx) > abs(dy): 
@@ -71,7 +69,7 @@ def get_triangle_symbol(p1, p2):
     else:  
         return '▲' if dy < 0 else '▼'
 
-
+# Fungsi animasi jalur
 def animate_path(binary_image, path, start, end):
     fig, ax = plt.subplots()
     ax.imshow(binary_image, cmap="gray", origin="upper")
@@ -96,45 +94,26 @@ def animate_path(binary_image, path, start, end):
     ax.legend()
     plt.show()
 
-
-def randomize_positions():
-    global start, end, binary_image
-    start = get_random_point(binary_image)
-    end = get_random_point(binary_image)
-    while start == end:
-        end = get_random_point(binary_image)
-    print(f"Source: {start}, Destination: {end}")
-
-    path = dijkstra(binary_image, start, end)
-    print(f"Jalur ditemukan! Panjang jalur: {len(path)}")
-    animate_path(binary_image, path, start, end)
-
-
 if __name__ == "__main__":
-    image_path = "jalan.png"  
-
+    image_path = "jalan.png"  # Nama file gambar peta
     try:
+        # Memuat gambar dan memvalidasi ukuran
         binary_image = load_image(image_path)
         print("Peta berhasil dimuat.")
 
+        # Menentukan posisi acak untuk source dan destination
         start = get_random_point(binary_image)
         end = get_random_point(binary_image)
         while start == end:
             end = get_random_point(binary_image)
-
         print(f"Source: {start}, Destination: {end}")
 
-        root = tk.Tk()
-        root.title("Smart Courier - Acak Kurir dan Tujuan")
-
-        Button(root, text="Acak Kurir dan Tujuan", command=randomize_positions).pack(pady=10)
-        Button(root, text="Keluar", command=root.destroy).pack(pady=10)
-
+        # Mencari jalur menggunakan algoritma Dijkstra
         path = dijkstra(binary_image, start, end)
         print(f"Jalur ditemukan! Panjang jalur: {len(path)}")
-        animate_path(binary_image, path, start, end)
 
-        root.mainloop()
+        # Animasi jalur
+        animate_path(binary_image, path, start, end)
 
     except FileNotFoundError as e:
         print(e)
