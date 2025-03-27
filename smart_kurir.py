@@ -9,12 +9,13 @@ from tkinter import Button, filedialog
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 class SmartCourierApp:
-    def __init__(self, root):
+    def _init_(self, root):
         self.root = root
         self.root.title("Smart Courier - High Speed")
 
         # Initialize variables
-        self.binary_image = None
+        self.original_image = None  # Menyimpan gambar asli berwarna
+        self.binary_image = None    # Menyimpan gambar biner untuk pathfinding
         self.start = None
         self.end = None
         self.path = None
@@ -40,27 +41,28 @@ class SmartCourierApp:
 
     def load_map(self):
         file_path = filedialog.askopenfilename(title="Select Map Image", 
-                                             filetypes=[("Image Files", "*.png;*.jpg;*.jpeg")])
+                                               filetypes=[("Image Files", ".png;.jpg;*.jpeg")])
         if file_path:
             try:
-                self.binary_image = self.load_image(file_path)
+                # Simpan gambar asli berwarna
+                self.original_image = cv2.imread(file_path, cv2.IMREAD_COLOR)
+                if self.original_image is None:
+                    raise FileNotFoundError(f"Image '{file_path}' not found!")
+
+                # Konversi ke RGB agar warna sesuai saat ditampilkan di matplotlib
+                self.original_image = cv2.cvtColor(self.original_image, cv2.COLOR_BGR2RGB)
+
+                # Proses gambar untuk pathfinding (konversi ke hitam-putih)
+                self.binary_image = cv2.inRange(self.original_image, (90, 90, 90), (150, 150, 150))
+
+                # Tampilkan gambar asli, bukan hitam-putih
                 self.ax.clear()
-                self.ax.imshow(self.binary_image, cmap="gray", origin="upper")
+                self.ax.imshow(self.original_image, origin="upper")
                 self.canvas.draw()
                 print("Map loaded successfully.")
+
             except Exception as e:
                 print(f"Error: {e}")
-
-    def load_image(self, image_path):
-        image = cv2.imread(image_path)
-        if image is None:
-            raise FileNotFoundError(f"Image '{image_path}' not found!")
-
-        if image.shape[1] < 1000 or image.shape[1] > 1500 or image.shape[0] < 700 or image.shape[0] > 1000:
-            raise ValueError("Map size must be between 1000x700 and 1500x1000 pixels!")
-
-        binary_image = cv2.inRange(image, (90, 90, 90), (150, 150, 150))
-        return binary_image
 
     def get_random_point(self, binary_image):
         white_pixels = np.column_stack(np.where(binary_image > 0))
@@ -129,13 +131,15 @@ class SmartCourierApp:
             if self.animation:
                 self.animation.event_source.stop()
 
-            # Draw new positions
+            # Gunakan gambar asli berwarna untuk tampilan
             self.ax.clear()
-            self.ax.imshow(self.binary_image, cmap="gray", origin="upper")
+            self.ax.imshow(self.original_image, origin="upper")
             self.ax.plot(self.start[1], self.start[0], "yo", label="Start")
             self.ax.plot(self.end[1], self.end[0], "ro", label="End")
+
+            # Simbol kurir
             self.triangle = self.ax.text(self.start[1], self.start[0], '▲', fontsize=22, 
-                                        color='red', ha='center', va='center')
+                                         color='red', ha='center', va='center')
             self.ax.legend()
             self.canvas.draw()
             self.current_frame = 0
@@ -150,11 +154,9 @@ class SmartCourierApp:
             return
 
         if self.paused:
-            # Resume animation
             self.paused = False
             self.animation.event_source.start()
         else:
-            # Start new animation with ultra-fast speed
             self.paused = False
             
             def update(frame):
@@ -173,7 +175,6 @@ class SmartCourierApp:
                     self.animation.event_source.stop()
                 return self.triangle,
 
-            # Ultra-fast animation settings (5ms interval)
             self.animation = animation.FuncAnimation(
                 self.fig, 
                 update, 
@@ -189,7 +190,7 @@ class SmartCourierApp:
             self.paused = True
             self.animation.event_source.stop()
 
-if __name__ == "__main__":
+if _name_ == "_main_":
     root = tk.Tk()
     app = SmartCourierApp(root)
     root.mainloop()
