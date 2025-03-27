@@ -11,7 +11,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 class SmartCourierApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Smart Courier")
+        self.root.title("Smart Courier - High Speed")
 
         # Initialize variables
         self.binary_image = None
@@ -28,10 +28,10 @@ class SmartCourierApp:
     def setup_gui(self):
         # Create buttons
         Button(self.root, text="Load Map", command=self.load_map).pack(pady=5)
-        Button(self.root, text="Acak Kurir dan Tujuan", command=self.randomize_positions).pack(pady=5)
-        Button(self.root, text="Start", command=self.start_or_resume_animation).pack(pady=5)
+        Button(self.root, text="Randomize Positions", command=self.randomize_positions).pack(pady=5)
+        Button(self.root, text="Start/Resume", command=self.start_or_resume_animation).pack(pady=5)
         Button(self.root, text="Stop", command=self.stop_animation).pack(pady=5)
-        Button(self.root, text="Keluar", command=self.root.quit).pack(pady=5)
+        Button(self.root, text="Exit", command=self.root.quit).pack(pady=5)
 
         # Create matplotlib figure
         self.fig, self.ax = plt.subplots(figsize=(8, 6))
@@ -39,7 +39,7 @@ class SmartCourierApp:
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
     def load_map(self):
-        file_path = filedialog.askopenfilename(title="Pilih Gambar Peta", 
+        file_path = filedialog.askopenfilename(title="Select Map Image", 
                                              filetypes=[("Image Files", "*.png;*.jpg;*.jpeg")])
         if file_path:
             try:
@@ -47,17 +47,17 @@ class SmartCourierApp:
                 self.ax.clear()
                 self.ax.imshow(self.binary_image, cmap="gray", origin="upper")
                 self.canvas.draw()
-                print("Peta berhasil dimuat.")
+                print("Map loaded successfully.")
             except Exception as e:
-                print(e)
+                print(f"Error: {e}")
 
     def load_image(self, image_path):
         image = cv2.imread(image_path)
         if image is None:
-            raise FileNotFoundError(f"Error: Gambar '{image_path}' tidak ditemukan!")
+            raise FileNotFoundError(f"Image '{image_path}' not found!")
 
         if image.shape[1] < 1000 or image.shape[1] > 1500 or image.shape[0] < 700 or image.shape[0] > 1000:
-            raise ValueError("Error: Ukuran peta harus dalam rentang 1000x700 hingga 1500x1000 piksel!")
+            raise ValueError("Map size must be between 1000x700 and 1500x1000 pixels!")
 
         binary_image = cv2.inRange(image, (90, 90, 90), (150, 150, 150))
         return binary_image
@@ -65,7 +65,7 @@ class SmartCourierApp:
     def get_random_point(self, binary_image):
         white_pixels = np.column_stack(np.where(binary_image > 0))
         if len(white_pixels) == 0:
-            raise ValueError("Error: Tidak ada area jalan yang valid pada peta!")
+            raise ValueError("No valid road areas found on the map!")
         return tuple(white_pixels[random.randint(0, len(white_pixels) - 1)])
 
     def dijkstra(self, binary_image, start, end):
@@ -99,7 +99,7 @@ class SmartCourierApp:
             step = parent.get(step)
 
         if len(path) == 1:
-            raise ValueError("Error: Tidak ada jalur dari start ke finish!")
+            raise ValueError("No path found from start to finish!")
 
         return path[::-1]
 
@@ -112,7 +112,7 @@ class SmartCourierApp:
 
     def randomize_positions(self):
         if self.binary_image is None:
-            print("Error: Muat peta terlebih dahulu!")
+            print("Error: Load map first!")
             return
 
         try:
@@ -122,8 +122,8 @@ class SmartCourierApp:
                 self.end = self.get_random_point(self.binary_image)
 
             self.path = self.dijkstra(self.binary_image, self.start, self.end)
-            print(f"Source: {self.start}, Destination: {self.end}")
-            print(f"Jalur ditemukan! Panjang jalur: {len(self.path)}")
+            print(f"Start: {self.start}, End: {self.end}")
+            print(f"Path found! Length: {len(self.path)} steps")
 
             # Clear previous animation
             if self.animation:
@@ -132,8 +132,8 @@ class SmartCourierApp:
             # Draw new positions
             self.ax.clear()
             self.ax.imshow(self.binary_image, cmap="gray", origin="upper")
-            self.ax.plot(self.start[1], self.start[0], "yo", label="Source (Start)")
-            self.ax.plot(self.end[1], self.end[0], "ro", label="Destination (Finish)")
+            self.ax.plot(self.start[1], self.start[0], "yo", label="Start")
+            self.ax.plot(self.end[1], self.end[0], "ro", label="End")
             self.triangle = self.ax.text(self.start[1], self.start[0], '▲', fontsize=22, 
                                         color='red', ha='center', va='center')
             self.ax.legend()
@@ -142,11 +142,11 @@ class SmartCourierApp:
             self.paused = False
 
         except Exception as e:
-            print(e)
+            print(f"Error: {e}")
 
     def start_or_resume_animation(self):
         if not self.path:
-            print("Error: Acak posisi kurir dan tujuan terlebih dahulu!")
+            print("Error: Randomize positions first!")
             return
 
         if self.paused:
@@ -154,10 +154,9 @@ class SmartCourierApp:
             self.paused = False
             self.animation.event_source.start()
         else:
-            # Start new animation
+            # Start new animation with ultra-fast speed
             self.paused = False
-            frames = len(self.path)
-
+            
             def update(frame):
                 if self.paused:
                     return self.triangle,
@@ -174,9 +173,14 @@ class SmartCourierApp:
                     self.animation.event_source.stop()
                 return self.triangle,
 
-            # Perubahan utama: interval dipercepat dari 50ms menjadi 20ms
+            # Ultra-fast animation settings (5ms interval)
             self.animation = animation.FuncAnimation(
-                self.fig, update, frames=frames, interval=20, blit=True, repeat=False
+                self.fig, 
+                update, 
+                frames=len(self.path), 
+                interval=5,  # Extreme speed (original: 50ms)
+                blit=True, 
+                repeat=False
             )
             self.canvas.draw()
 
