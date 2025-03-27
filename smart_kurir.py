@@ -85,7 +85,7 @@ def animate_path(binary_image, path, start, end):
     ax.plot(start[1], start[0], "yo", label="Source (Start)")
     ax.plot(end[1], end[0], "ro", label="Destination (Finish)")
 
-    triangle = ax.text(path[0][1], path[0][0], '▲', fontsize=24, color='red', ha='center', va='center')
+    triangle = ax.text(path[0][1], path[0][0], '▲', fontsize=22, color='red', ha='center', va='center')
 
     step_size = max(1, len(path) // 300)
 
