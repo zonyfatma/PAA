@@ -9,7 +9,7 @@ from tkinter import Button, filedialog
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 class SmartCourierApp:
-    def _init_(self, root):
+    def __init__(self, root):
         self.root = root
         self.root.title("Smart Courier - High Speed")
 
@@ -41,7 +41,7 @@ class SmartCourierApp:
 
     def load_map(self):
         file_path = filedialog.askopenfilename(title="Select Map Image", 
-                                               filetypes=[("Image Files", ".png;.jpg;*.jpeg")])
+                                               filetypes=[("Image Files", "*.png;*.jpg;*.jpeg")])
         if file_path:
             try:
                 # Simpan gambar asli berwarna
@@ -77,6 +77,9 @@ class SmartCourierApp:
         visited = set()
         parent = {start: None}
 
+        # Mencari pusat dari area abu-abu
+        road_center = self.find_road_center(binary_image)
+
         while queue:
             cost, current = heapq.heappop(queue)
             if current in visited:
@@ -103,7 +106,19 @@ class SmartCourierApp:
         if len(path) == 1:
             raise ValueError("No path found from start to finish!")
 
+        # Return path reversed
         return path[::-1]
+
+    def find_road_center(self, binary_image):
+        """Mencari titik tengah dari area abu-abu (jalan)."""
+        # Temukan pixel abu-abu (white area)
+        road_pixels = np.column_stack(np.where(binary_image > 0))
+        
+        # Cari titik tengah
+        center_y = np.mean(road_pixels[:, 0])
+        center_x = np.mean(road_pixels[:, 1])
+
+        return (int(center_y), int(center_x))
 
     def get_triangle_symbol(self, p1, p2):
         dy, dx = p2[0] - p1[0], p2[1] - p1[1]
@@ -190,7 +205,7 @@ class SmartCourierApp:
             self.paused = True
             self.animation.event_source.stop()
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     root = tk.Tk()
     app = SmartCourierApp(root)
     root.mainloop()
