@@ -13,9 +13,8 @@ class SmartCourierApp:
         self.root = root
         self.root.title("Smart Courier - High Speed")
 
-        # Initialize variables
-        self.original_image = None  # Menyimpan gambar asli berwarna
-        self.binary_image = None    # Menyimpan gambar biner untuk pathfinding
+        self.original_image = None  
+        self.binary_image = None    
         self.start = None
         self.end = None
         self.path = None
@@ -23,18 +22,15 @@ class SmartCourierApp:
         self.paused = False
         self.current_frame = 0
 
-        # GUI Setup
         self.setup_gui()
 
     def setup_gui(self):
-        # Create buttons
         Button(self.root, text="Load Map", command=self.load_map).pack(pady=5)
         Button(self.root, text="Randomize Positions", command=self.randomize_positions).pack(pady=5)
         Button(self.root, text="Start/Resume", command=self.start_or_resume_animation).pack(pady=5)
         Button(self.root, text="Stop", command=self.stop_animation).pack(pady=5)
         Button(self.root, text="Exit", command=self.root.quit).pack(pady=5)
 
-        # Create matplotlib figure
         self.fig, self.ax = plt.subplots(figsize=(8, 6))
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.root)
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
@@ -44,18 +40,14 @@ class SmartCourierApp:
                                                filetypes=[("Image Files", "*.png;*.jpg;*.jpeg")])
         if file_path:
             try:
-                # Simpan gambar asli berwarna
                 self.original_image = cv2.imread(file_path, cv2.IMREAD_COLOR)
                 if self.original_image is None:
                     raise FileNotFoundError(f"Image '{file_path}' not found!")
 
-                # Konversi ke RGB agar warna sesuai saat ditampilkan di matplotlib
                 self.original_image = cv2.cvtColor(self.original_image, cv2.COLOR_BGR2RGB)
 
-                # Proses gambar untuk pathfinding (konversi ke hitam-putih)
                 self.binary_image = cv2.inRange(self.original_image, (90, 90, 90), (150, 150, 150))
 
-                # Tampilkan gambar asli, bukan hitam-putih
                 self.ax.clear()
                 self.ax.imshow(self.original_image, origin="upper")
                 self.canvas.draw()
@@ -77,7 +69,6 @@ class SmartCourierApp:
         visited = set()
         parent = {start: None}
 
-        # Mencari pusat dari area abu-abu
         road_center = self.find_road_center(binary_image)
 
         while queue:
@@ -106,15 +97,12 @@ class SmartCourierApp:
         if len(path) == 1:
             raise ValueError("No path found from start to finish!")
 
-        # Return path reversed
         return path[::-1]
 
     def find_road_center(self, binary_image):
         """Mencari titik tengah dari area abu-abu (jalan)."""
-        # Temukan pixel abu-abu (white area)
         road_pixels = np.column_stack(np.where(binary_image > 0))
-        
-        # Cari titik tengah
+ 
         center_y = np.mean(road_pixels[:, 0])
         center_x = np.mean(road_pixels[:, 1])
 
@@ -142,17 +130,14 @@ class SmartCourierApp:
             print(f"Start: {self.start}, End: {self.end}")
             print(f"Path found! Length: {len(self.path)} steps")
 
-            # Clear previous animation
             if self.animation:
                 self.animation.event_source.stop()
 
-            # Gunakan gambar asli berwarna untuk tampilan
             self.ax.clear()
             self.ax.imshow(self.original_image, origin="upper")
             self.ax.plot(self.start[1], self.start[0], "yo", label="Start")
             self.ax.plot(self.end[1], self.end[0], "ro", label="End")
 
-            # Simbol kurir
             self.triangle = self.ax.text(self.start[1], self.start[0], '▲', fontsize=22, 
                                          color='red', ha='center', va='center')
             self.ax.legend()
