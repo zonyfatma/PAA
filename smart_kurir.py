@@ -179,7 +179,7 @@ class SmartCourierApp:
                 self.fig, 
                 update, 
                 frames=len(self.path), 
-                interval=5,  # Extreme speed (original: 50ms)
+                interval=2,  # Extreme speed (original: 50ms)
                 blit=True, 
                 repeat=False
             )
