@@ -141,7 +141,7 @@ class SmartCourierApp:
             self.ax.clear()
             self.ax.imshow(self.original_image, origin="upper")
 
-            self.plot_flag_icon("flag_green.png", self.start)
+            self.plot_flag_icon("flag_yellow.png", self.start)
             self.plot_flag_icon("flag_red.png", self.end)
 
             self.triangle = self.ax.text(self.start[1], self.start[0], '▲', fontsize=22, 
@@ -210,7 +210,7 @@ class SmartCourierApp:
             self.ax.clear()
             self.ax.imshow(self.original_image, origin="upper")
 
-            self.plot_flag_icon("flag_green.png", self.start)
+            self.plot_flag_icon("flag_yellow.png", self.start)
             self.plot_flag_icon("flag_red.png", self.end)
 
             self.triangle = self.ax.text(self.start[1], self.start[0], '▲', fontsize=22,
