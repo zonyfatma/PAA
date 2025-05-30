@@ -7,11 +7,12 @@ import random
 import tkinter as tk
 from tkinter import Button, filedialog
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 
 class SmartCourierApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Smart Courier - High Speed")
+        self.root.title("Smart Courier - Final Version")
 
         self.original_image = None  
         self.binary_image = None    
@@ -29,6 +30,7 @@ class SmartCourierApp:
         Button(self.root, text="Randomize Positions", command=self.randomize_positions).pack(pady=5)
         Button(self.root, text="Start/Resume", command=self.start_or_resume_animation).pack(pady=5)
         Button(self.root, text="Stop", command=self.stop_animation).pack(pady=5)
+        Button(self.root, text="Reset Cat Position", command=self.reset_animation).pack(pady=5)
         Button(self.root, text="Exit", command=self.root.quit).pack(pady=5)
 
         self.fig, self.ax = plt.subplots(figsize=(8, 6))
@@ -46,10 +48,9 @@ class SmartCourierApp:
 
                 self.original_image = cv2.cvtColor(self.original_image, cv2.COLOR_BGR2RGB)
 
-                # Validasi ukuran gambar
                 h, w = self.original_image.shape[:2]
                 if not (1000 <= w <= 1500 and 700 <= h <= 1000):
-                    raise ValueError("Ukuran peta harus antara 1000–1500 px (lebar) dan 700–1000 px (tinggi)")
+                    raise ValueError("Ukuran peta harus 1000–1500px (lebar) dan 700–1000px (tinggi)")
 
                 self.binary_image = cv2.inRange(self.original_image, (90, 90, 90), (150, 150, 150))
 
@@ -109,6 +110,15 @@ class SmartCourierApp:
         else:  
             return '▲' if dy < 0 else '▼'
 
+    def plot_flag_icon(self, image_path, coord, zoom=0.05):
+        try:
+            img = plt.imread(image_path)
+            imagebox = OffsetImage(img, zoom=zoom)
+            ab = AnnotationBbox(imagebox, (coord[1], coord[0]), frameon=False)
+            self.ax.add_artist(ab)
+        except Exception as e:
+            print(f"Error loading flag icon: {e}")
+
     def randomize_positions(self):
         if self.binary_image is None:
             print("Error: Load map first!")
@@ -126,15 +136,16 @@ class SmartCourierApp:
 
             if self.animation:
                 self.animation.event_source.stop()
+                self.animation = None
 
             self.ax.clear()
             self.ax.imshow(self.original_image, origin="upper")
-            self.ax.plot(self.start[1], self.start[0], "yo", label="Start")
-            self.ax.plot(self.end[1], self.end[0], "ro", label="End")
+
+            self.plot_flag_icon("flag_green.png", self.start)
+            self.plot_flag_icon("flag_red.png", self.end)
 
             self.triangle = self.ax.text(self.start[1], self.start[0], '▲', fontsize=22, 
                                          color='red', ha='center', va='center')
-            self.ax.legend()
             self.canvas.draw()
             self.current_frame = 0
             self.paused = False
@@ -147,12 +158,12 @@ class SmartCourierApp:
             print("Error: Randomize positions first!")
             return
 
-        if self.paused:
+        if self.paused and self.animation:
             self.paused = False
             self.animation.event_source.start()
         else:
             self.paused = False
-            step_size = 3  # percepat langkah per frame
+            step_size = 3
 
             def update(frame):
                 if self.paused:
@@ -185,6 +196,34 @@ class SmartCourierApp:
         if self.animation:
             self.paused = True
             self.animation.event_source.stop()
+
+    def reset_animation(self):
+        if not self.path:
+            print("Error: Tidak ada jalur untuk di-reset!")
+            return
+
+        try:
+            if self.animation:
+                self.animation.event_source.stop()
+                self.animation = None
+
+            self.ax.clear()
+            self.ax.imshow(self.original_image, origin="upper")
+
+            self.plot_flag_icon("flag_green.png", self.start)
+            self.plot_flag_icon("flag_red.png", self.end)
+
+            self.triangle = self.ax.text(self.start[1], self.start[0], '▲', fontsize=22,
+                                         color='red', ha='center', va='center')
+
+            self.canvas.draw()
+
+            self.current_frame = 0
+            self.paused = True
+            print("Kurir kembali ke titik awal. Tekan Start/Resume untuk melanjutkan.")
+
+        except Exception as e:
+            print(f"Error during reset: {e}")
 
 if __name__ == "__main__":
     root = tk.Tk()
