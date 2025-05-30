@@ -46,6 +46,11 @@ class SmartCourierApp:
 
                 self.original_image = cv2.cvtColor(self.original_image, cv2.COLOR_BGR2RGB)
 
+                # Validasi ukuran gambar
+                h, w = self.original_image.shape[:2]
+                if not (1000 <= w <= 1500 and 700 <= h <= 1000):
+                    raise ValueError("Ukuran peta harus antara 1000–1500 px (lebar) dan 700–1000 px (tinggi)")
+
                 self.binary_image = cv2.inRange(self.original_image, (90, 90, 90), (150, 150, 150))
 
                 self.ax.clear()
@@ -68,8 +73,6 @@ class SmartCourierApp:
         queue = [(0, start)]
         visited = set()
         parent = {start: None}
-
-        road_center = self.find_road_center(binary_image)
 
         while queue:
             cost, current = heapq.heappop(queue)
@@ -98,15 +101,6 @@ class SmartCourierApp:
             raise ValueError("No path found from start to finish!")
 
         return path[::-1]
-
-    def find_road_center(self, binary_image):
-        """Mencari titik tengah dari area abu-abu (jalan)."""
-        road_pixels = np.column_stack(np.where(binary_image > 0))
- 
-        center_y = np.mean(road_pixels[:, 0])
-        center_x = np.mean(road_pixels[:, 1])
-
-        return (int(center_y), int(center_x))
 
     def get_triangle_symbol(self, p1, p2):
         dy, dx = p2[0] - p1[0], p2[1] - p1[1]
@@ -158,7 +152,8 @@ class SmartCourierApp:
             self.animation.event_source.start()
         else:
             self.paused = False
-            
+            step_size = 3  # percepat langkah per frame
+
             def update(frame):
                 if self.paused:
                     return self.triangle,
@@ -168,19 +163,20 @@ class SmartCourierApp:
                 self.triangle.set_position((x, y))
 
                 if idx < len(self.path) - 1:
-                    self.triangle.set_text(self.get_triangle_symbol(self.path[idx], self.path[idx + 1]))
+                    next_idx = min(self.current_frame + step_size, len(self.path) - 1)
+                    self.triangle.set_text(self.get_triangle_symbol(self.path[idx], self.path[next_idx]))
 
-                self.current_frame += 1
+                self.current_frame += step_size
                 if self.current_frame >= len(self.path):
                     self.animation.event_source.stop()
                 return self.triangle,
 
             self.animation = animation.FuncAnimation(
-                self.fig, 
-                update, 
-                frames=len(self.path), 
-                interval=2,  # Extreme speed (original: 50ms)
-                blit=True, 
+                self.fig,
+                update,
+                frames=range(0, len(self.path), step_size),
+                interval=1,
+                blit=True,
                 repeat=False
             )
             self.canvas.draw()
