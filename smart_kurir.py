@@ -110,7 +110,7 @@ class SmartCourierApp:
         else:  
             return '▲' if dy < 0 else '▼'
 
-    def plot_flag_icon(self, image_path, coord, zoom=0.05):
+    def plot_flag_icon(self, image_path, coord, zoom=0.025):
         try:
             img = plt.imread(image_path)
             imagebox = OffsetImage(img, zoom=zoom)
